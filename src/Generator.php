@@ -6,20 +6,21 @@ class Generator
 {
     public static function generate($count)
     {
-        $numbers = range(1, 100);
+        $numbers = range(1, $count);
         shuffle($numbers);
 
         $faker = \Faker\Factory::create();
         $faker->seed(1);
-        $companies = [];
+        $users = [];
         for ($i = 0; $i < $count; $i++) {
-            $companies[] = [
+            $users[] = [
                 'id' => $numbers[$i],
-                'name' => $faker->company,
-                'phone' => $faker->phoneNumber
+                'firstName' => $faker->firstName,
+                'lastName' => $faker->lastName,
+                'email' => $faker->email
             ];
         }
 
-        return $companies;
+        return $users;
     }
 }

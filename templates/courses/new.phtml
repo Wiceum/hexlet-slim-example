@@ -1,0 +1,27 @@
+<form method="post" action="/courses">
+<div>
+    <label>
+        Платный курс?
+        <select name="course[paid]">
+            <option value="true" <?=$course['paid'] === 'true' ? 'selected' : '' ?>>Да</option>
+            <option value="false" <?=$course['paid'] === 'false' ? 'selected' : '' ?>>Нет</option>
+            <?php if (isset($errors['paid'])): ?>
+                <div><?= $errors['paid'] ?></div>
+            <?php endif ?>
+        </select>
+    </label>
+</div>
+<div>
+    <label>
+        Название курса:
+        <input type="text" name="course[title]" value="<?=htmlspecialchars($course['title'])?>">
+        <?php if (isset($errors['title'])): ?>
+            <div><?= $errors['title'] ?></div>
+        <?php endif ?>
+    </label>
+</div>
+    <div>
+        <input type="submit" value="Submit">
+    </div>
+</form>
+

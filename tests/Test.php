@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Tests;
+
 
 use PHPUnit\Framework\TestCase;
 
@@ -10,55 +12,58 @@ class Test extends TestCase
     public function setUp(): void
     {
         $this->client = new \GuzzleHttp\Client([
-            'base_uri' => 'http://localhost:8080'
+            'base_uri' => 'http://localhost:8080',
+            'http_errors' => false,
         ]);
     }
 
-    public function testCompanies1()
+    public function testCourses()
     {
-        $expected = [
-            [ 'name' => 'Adams-Reichel','phone' => '1-986-987-9109 x56053' ],
-            [ 'name' => 'Dibbert-Morissette','phone' => '439.584.3132 x735' ],
-            [ 'name' => 'Ledner and Sons','phone' => '979-539-4173 x048' ],
-            [ 'name' => 'Kiehn-Mann','phone' => '972-379-1995 x61054' ],
-            [ 'name' => 'Bosco, Pouros and Larson','phone' => '887-919-2730 x49977' ]
-        ];
-        $response = $this->client->get('/companies');
+        $this->client->get('/courses');
+        $response = $this->client->get('/courses/new');
         $body = $response->getBody()->getContents();
-        $companies = json_decode($body);
-        $filteredCompanies = collect($companies)->map(function ($company) {
-            return ['name' => $company->name, 'phone' => $company->phone];
-        })->all();
-        $this->assertEquals($expected, $filteredCompanies);
-    }
+        $this->assertStringContainsString('course[title]', $body);
+        $this->assertStringContainsString('course[paid]', $body);
 
-    public function testCompanies2()
-    {
-        $expected = [
-            [ 'name' => 'Ledner and Sons','phone' => '979-539-4173 x048' ],
-        ];
-        $response = $this->client->get('/companies?page=3&per=1');
+        $formParams = ['course' => ['title' => '', 'paid' => '']];
+        $response = $this->client->post('/courses', [
+            /* 'debug' => true, */
+            'form_params' => $formParams
+        ]);
         $body = $response->getBody()->getContents();
-        $companies = json_decode($body);
-        $filteredCompanies = collect($companies)->map(function ($company) {
-            return ['name' => $company->name, 'phone' => $company->phone];
-        })->all();
-        $this->assertEquals($expected, $filteredCompanies);
-    }
+        $this->assertEquals(422, $response->getStatusCode());
+        $this->assertStringContainsString("Can't be blank", $body);
 
-    public function testCompanies3()
-    {
-        $expected = [
-            [ 'name' => 'Zemlak-Wuckert', 'phone' => '291-495-8263 x678' ],
-            [ 'name' => 'Osinski, Kutch and Christiansen', 'phone' => '(843) 796-4156 x65355' ],
-        ];
-        $response = $this->client->get('/companies?page=20&per=2');
+        $formParams = ['course' => ['title' => 'course name', 'paid' => '']];
+        $response = $this->client->post('/courses', [
+            /* 'debug' => true, */
+            'form_params' => $formParams
+        ]);
         $body = $response->getBody()->getContents();
-        $companies = json_decode($body);
-        $filteredCompanies = collect($companies)->map(function ($company) {
-            return ['name' => $company->name, 'phone' => $company->phone];
-        })->all();
-        $this->assertEquals($expected, $filteredCompanies);
+        $this->assertStringContainsString("Can't be blank", $body);
+        $this->assertStringContainsString('course name', $body);
+
+        $formParams = ['course' => ['title' => '', 'paid' => '1']];
+        $response = $this->client->post('/courses', [
+            /* 'debug' => true, */
+            'form_params' => $formParams
+        ]);
+        $body = $response->getBody()->getContents();
+        $this->assertStringContainsString("Can't be blank", $body);
+
+        $formParams = ['course' => ['title' => '<script></script>', 'paid' => '']];
+        $response = $this->client->post('/courses', [
+            /* 'debug' => true, */
+            'form_params' => $formParams
+        ]);
+        $body = $response->getBody()->getContents();
+        $this->assertStringContainsString("&lt;script&gt;&lt;/script&gt;", $body);
+
+        $formParams = ['course' => ['title' => '<script></script>', 'paid' => '1']];
+        $response = $this->client->post('/courses', [
+            'allow_redirects' => false,
+            'form_params' => $formParams
+        ]);
+        $this->assertEquals(302, $response->getStatusCode());
     }
 }
-
